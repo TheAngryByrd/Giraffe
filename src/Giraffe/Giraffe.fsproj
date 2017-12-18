@@ -46,6 +46,7 @@
     <Compile Include="HttpStatusCodeHandlers.fs" />
     <Compile Include="TokenParsers.fs" />
     <Compile Include="TokenRouter.fs" />
+    <Compile Include="WebSockets.fs" />
     <Compile Include="Middleware.fs" />
   </ItemGroup>
 
