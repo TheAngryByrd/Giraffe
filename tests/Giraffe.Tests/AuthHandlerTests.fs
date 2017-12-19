@@ -9,6 +9,7 @@ open Xunit
 open NSubstitute
 open FsCheck
 open FsCheck.Xunit
+open Hopac
 
 // ---------------------------------
 // Helper functions
@@ -210,7 +211,7 @@ let ``test authentication`` (givenUser: User) givenRoute expected =
         | Unauthorized -> 401, Response.AccessDenied
         | Ok content   -> 200, content
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with

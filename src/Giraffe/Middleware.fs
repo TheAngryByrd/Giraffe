@@ -10,6 +10,7 @@ open Microsoft.Extensions.Logging
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.FileProviders
 open Giraffe.HttpHandlers
+open Hopac
 
 /// ---------------------------
 /// Logging helper functions
@@ -32,10 +33,10 @@ type GiraffeMiddleware (next          : RequestDelegate,
     do if isNull next then raise (ArgumentNullException("next"))
 
     // pre-compile the handler pipeline
-    let func : HttpFunc = handler (Some >> Task.FromResult)
+    let func : HttpFunc = handler (Some >> Job.result)
 
     member __.Invoke (ctx : HttpContext) =
-        task {
+        job {
             let! result = func ctx
             let  logger = loggerFactory.CreateLogger<GiraffeMiddleware>()
 
@@ -47,7 +48,7 @@ type GiraffeMiddleware (next          : RequestDelegate,
 
             if (result.IsNone) then
                 return! next.Invoke ctx
-        } :> Task
+        } |> startAsTask :> Task
 
 /// ---------------------------
 /// Error Handling middleware
@@ -60,18 +61,18 @@ type GiraffeErrorHandlerMiddleware (next          : RequestDelegate,
     do if isNull next then raise (ArgumentNullException("next"))
 
     member __.Invoke (ctx : HttpContext) =
-        task {
+        job {
             try return! next.Invoke ctx
             with ex ->
                 let logger = loggerFactory.CreateLogger<GiraffeErrorHandlerMiddleware>()
                 try
-                    let func = (Some >> Task.FromResult)
+                    let func = (Some >> Job.result)
                     let! _ = errorHandler ex logger func ctx
                     return ()
                 with ex2 ->
                     logger.LogError(EventId(0), ex,  "An unhandled exception has occurred while executing the request.")
                     logger.LogError(EventId(0), ex2, "An exception was thrown attempting to handle the original exception.")
-        } :> Task
+        } |> startAsTask :> Task
 
 /// ---------------------------
 /// Extension methods for convenience

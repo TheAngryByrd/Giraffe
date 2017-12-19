@@ -85,7 +85,7 @@ let ``GET "/" returns "Hello World"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "Hello World"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -109,7 +109,7 @@ let ``GET "/foo" returns "bar"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "bar"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -133,7 +133,7 @@ let ``GET "/FOO" returns 404 "Not found"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "Not found"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -160,7 +160,7 @@ let ``GET "/json" returns json object`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "{\"foo\":\"john\",\"bar\":\"doe\",\"age\":30}"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -189,7 +189,7 @@ let ``POST "/post/1" returns "1"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "1"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -218,7 +218,7 @@ let ``POST "/post/2" returns "2"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "2"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -245,7 +245,7 @@ let ``PUT "/post/2" returns 404 "Not found"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "Not found"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -278,7 +278,7 @@ let ``POST "/text" with supported Accept header returns "good"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "text"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -311,7 +311,7 @@ let ``POST "/json" with supported Accept header returns "json"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "\"json\""
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -344,7 +344,7 @@ let ``POST "/either" with supported Accept header returns "either"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "either"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -378,7 +378,7 @@ let ``POST "/either" with unsupported Accept header returns 404 "Not found"`` ()
     ctx.Response.Body <- new MemoryStream()
     let expected = "Not found"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -405,7 +405,7 @@ let ``POST "/either" with unsupported Accept header returns 404 "Not found"`` ()
 //     ctx.Response.Body <- new MemoryStream()
 //     let expected = "BaR"
 
-//     task {
+//     job {
 //         let! result = app next ctx
 
 //         match result with
@@ -432,7 +432,7 @@ let ``GET "/foo/blah blah/bar" returns "blah blah"`` () =
     //let expected = "blah%20blah"
     let expected = "blah blah"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -458,7 +458,7 @@ let ``GET "/foo/johndoe/59" returns "Name: johndoe, Age: 59"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "Name: johndoe, Age: 59"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -483,7 +483,7 @@ let ``GET "/foo/johndoe/59" returns "Name: johndoe, Age: 59"`` () =
 //     ctx.Response.Body <- new MemoryStream()
 //     let expected = "1"
 
-//     task {
+//     job {
 //         let! result = app next ctx
 
 //         match result with
@@ -508,7 +508,7 @@ let ``GET "/foo/johndoe/59" returns "Name: johndoe, Age: 59"`` () =
 //     ctx.Response.Body <- new MemoryStream()
 //     let expected = "523"
 
-//     task {
+//     job {
 //         let! result = app next ctx
 
 //         match result with
@@ -538,7 +538,7 @@ let ``Sub route with empty route`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "api root"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -568,7 +568,7 @@ let ``Sub route with non empty route`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "users"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -579,7 +579,7 @@ let ``Sub route with non empty route`` () =
 [<Fact>]
 let ``Route after sub route with same beginning of path`` () =
 
-    task {
+    job {
         let ctx = Substitute.For<HttpContext>()
 
         let app =
@@ -636,7 +636,7 @@ let ``Nested sub routes`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "users v2"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -674,7 +674,7 @@ let ``Route after nested sub routes with same beginning of path`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "else"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -709,7 +709,7 @@ let ``Multiple nested sub routes`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "correct admin2"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -739,7 +739,7 @@ let ``GET "/api/foo/bar/yadayada" returns "yadayada"`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "yadayada"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -776,7 +776,7 @@ let ``GET "/person" returns rendered HTML view`` () =
     ctx.Response.Body <- new MemoryStream()
     let expected = "<!DOCTYPE html><html><head><title>Html Node</title></head><body><p>John Doe is 30 years old.</p></body></html>"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -818,7 +818,7 @@ let ``Get "/auto" with Accept header of "application/json" returns JSON object``
 
     let expected = "{\"firstName\":\"John\",\"lastName\":\"Doe\",\"birthDate\":\"1990-07-12T00:00:00\",\"height\":1.85,\"piercings\":[\"left ear\",\"nose\"]}"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -860,7 +860,7 @@ let ``Get "/auto" with Accept header of "application/xml; q=0.9, application/jso
 
     let expected = "{\"firstName\":\"John\",\"lastName\":\"Doe\",\"birthDate\":\"1990-07-12T00:00:00\",\"height\":1.85,\"piercings\":[\"left ear\",\"nose\"]}"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -912,7 +912,7 @@ let ``Get "/auto" with Accept header of "application/xml" returns XML object`` (
   </Piercings>
 </Person>"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -964,7 +964,7 @@ let ``Get "/auto" with Accept header of "application/xml, application/json" retu
   </Piercings>
 </Person>"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -1006,7 +1006,7 @@ let ``Get "/auto" with Accept header of "application/json, application/xml" retu
 
     let expected = "{\"firstName\":\"John\",\"lastName\":\"Doe\",\"birthDate\":\"1990-07-12T00:00:00\",\"height\":1.85,\"piercings\":[\"ear\",\"nose\"]}"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -1058,7 +1058,7 @@ let ``Get "/auto" with Accept header of "application/json; q=0.5, application/xm
   </Piercings>
 </Person>"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -1110,7 +1110,7 @@ let ``Get "/auto" with Accept header of "application/json; q=0.5, application/xm
   </Piercings>
 </Person>"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -1156,7 +1156,7 @@ Birth date: 1990-07-12
 Height: 1.85
 Piercings: [|""ear""; ""nose""|]"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -1198,7 +1198,7 @@ let ``Get "/auto" with Accept header of "text/html" returns a 406 response`` () 
 
     let expected = "text/html is unacceptable by the server."
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -1240,7 +1240,7 @@ let ``Get "/auto" without an Accept header returns a JSON object`` () =
 
     let expected = "{\"firstName\":\"John\",\"lastName\":\"Doe\",\"birthDate\":\"1990-07-12T00:00:00\",\"height\":1.85,\"piercings\":[\"ear\",\"nose\"]}"
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -1266,7 +1266,7 @@ let ``Warbler function should execute inner function each time`` () =
     ctx.Request.Path.ReturnsForAnyArgs (PathString("/foo")) |> ignore
     ctx.Response.Body <- new MemoryStream()
 
-    task {
+    job {
         let! res1 = app ctx
         let result1 = getBody res1.Value
 
@@ -1305,7 +1305,7 @@ let ``GET "/redirect" redirect to "/" `` () =
     ctx.Request.Method.ReturnsForAnyArgs "GET" |> ignore
     ctx.Request.Path.ReturnsForAnyArgs (PathString("/redirect")) |> ignore
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -1328,7 +1328,7 @@ let ``POST "/redirect" redirect to "/" `` () =
     ctx.Request.Method.ReturnsForAnyArgs "POST" |> ignore
     ctx.Request.Path.ReturnsForAnyArgs (PathString("/redirect")) |> ignore
 
-    task {
+    job {
         let! result = app next ctx
 
         match result with
@@ -1357,7 +1357,7 @@ type DebugTests(output:ITestOutputHelper) =
         ctx.Request.Path.ReturnsForAnyArgs (PathString("/api/newpassword")) |> ignore
         ctx.Response.Body <- new MemoryStream()
 
-        task {
+        job {
             let! result = app (Some >> Task.FromResult) ctx
 
             match result with
@@ -1397,7 +1397,7 @@ type DebugTests(output:ITestOutputHelper) =
         ctx.Request.Host.Port.Value.ReturnsForAnyArgs 9002 |> ignore
         ctx.Response.Body <- new MemoryStream()
 
-        task {
+        job {
             let! result = app (Some >> Task.FromResult) ctx
 
             match result with

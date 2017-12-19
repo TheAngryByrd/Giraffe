@@ -18,12 +18,12 @@ open FSharp.Core.Printf
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 open Newtonsoft.Json.Serialization
-open Giraffe.Tasks
+open Hopac
 open Giraffe.Common
 open Giraffe.FormatExpressions
 open Giraffe.XmlViewEngine
 
-type HttpFuncResult = Task<HttpContext option>
+type HttpFuncResult = Job<HttpContext option>
 type HttpFunc       = HttpContext -> HttpFuncResult
 type HttpHandler    = HttpFunc  -> HttpFunc
 type ErrorHandler   = exn -> ILogger -> HttpHandler
@@ -34,8 +34,8 @@ type ErrorHandler   = exn -> ILogger -> HttpHandler
 
 let inline warbler f (next : HttpFunc) (ctx : HttpContext) = f (next, ctx) next ctx
 
-let private abort  : HttpFuncResult = Task.FromResult None
-let private finish : HttpFunc       = Some >> Task.FromResult
+let private abort  : HttpFuncResult = Job.result None
+let private finish : HttpFunc       = Some >> Job.result
 
 /// ---------------------------
 /// Sub route helper functions
@@ -56,7 +56,7 @@ let private getPath (ctx : HttpContext) =
 
 let private handlerWithRootedPath (path : string) (handler : HttpHandler) : HttpHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             let savedSubPath = getSavedSubPath ctx
             ctx.Items.Item RouteKey <- ((savedSubPath |> Option.defaultValue "") + path)
             let! result = handler next ctx
@@ -90,7 +90,7 @@ let (>=>) = compose
 // by pre-applying next to handler list passed from choose
 let rec private chooseHttpFunc (funcs : HttpFunc list) : HttpFunc =
     fun (ctx : HttpContext) ->
-        task {
+        job {
             match funcs with
             | [] -> return None
             | func :: tail ->
@@ -136,7 +136,7 @@ let mustAccept (mimeTypes : string list) : HttpHandler =
 /// Challenges the client to authenticate with a given authentication scheme.
 let challenge (authScheme : string) : HttpHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             do! ctx.ChallengeAsync authScheme
             return! next ctx
         }
@@ -144,7 +144,7 @@ let challenge (authScheme : string) : HttpHandler =
 /// Signs off the current user.
 let signOff (authScheme : string) : HttpHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             do! ctx.SignOutAsync authScheme
             return! next ctx
         }
@@ -283,7 +283,7 @@ let setHttpHeader (key : string) (value : obj) : HttpHandler =
 /// Writes to the body of the HTTP response and sets the HTTP header Content-Length accordingly.
 let setBody (bytes : byte array) : HttpHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             ctx.Response.Headers.["Content-Length"] <- StringValues(bytes.Length.ToString())
             do! ctx.Response.Body.WriteAsync(bytes, 0, bytes.Length)
             return Some ctx
@@ -320,7 +320,7 @@ let xml (dataObj : obj) : HttpHandler =
 /// with a Content-Type of text/html.
 let htmlFile (filePath : string) : HttpHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             let filePath =
                 if Path.IsPathRooted filePath then
                     filePath
@@ -409,7 +409,7 @@ let negotiate (responseObj : obj) : HttpHandler =
 let redirectTo (permanent : bool) (location : string) : HttpHandler  =
     fun (next : HttpFunc) (ctx : HttpContext) ->
         ctx.Response.Redirect(location, permanent)
-        Task.FromResult (Some ctx)
+        Job.result (Some ctx)
 
 /// Filters an incoming HTTP request based on the port.
 let portRoute (fns : (int * HttpHandler) list) : HttpHandler =

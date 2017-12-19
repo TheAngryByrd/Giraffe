@@ -15,6 +15,8 @@ open Microsoft.Net.Http.Headers
 open Newtonsoft.Json
 open Common
 open XmlViewEngine
+open Hopac
+open Microsoft.AspNetCore.Http
 
 type HttpContext with
 
@@ -68,19 +70,19 @@ type HttpContext with
     member this.BindJsonAsync<'T>() = this.BindJsonAsync<'T> defaultJsonSerializerSettings
 
     member this.BindJsonAsync<'T> (settings : JsonSerializerSettings) =
-        task {
+        job {
             return deserializeJsonFromStream<'T> settings this.Request.Body
         }
 
     member this.BindXmlAsync<'T>() =
-        task {
+        job {
             let! body = this.ReadBodyFromRequestAsync()
             return deserializeXml<'T> body
         }
 
     member this.BindFormAsync<'T>(?cultureInfo : CultureInfo) =
-        task {
-            let! form   = this.Request.ReadFormAsync()
+        job {
+            let! (form : IFormCollection)    = this.Request.ReadFormAsync()
             let culture = defaultArg cultureInfo CultureInfo.InvariantCulture
             let obj     = Activator.CreateInstance<'T>()
             let props   = obj.GetType().GetProperties(BindingFlags.Instance ||| BindingFlags.Public)
@@ -140,7 +142,7 @@ type HttpContext with
     member this.BindModelAsync<'T>(?cultureInfo) = this.BindModelAsync<'T>(defaultJsonSerializerSettings, ?cultureInfo = cultureInfo)
 
     member this.BindModelAsync<'T> (settings : JsonSerializerSettings, ?cultureInfo : CultureInfo) =
-        task {
+        job {
             let method = this.Request.Method
             if method.Equals "POST" || method.Equals "PUT" then
                 let original = StringSegment(this.Request.ContentType)
@@ -174,35 +176,35 @@ type HttpContext with
     member this.WriteJsonAsync (value : obj) = this.WriteJsonAsync(defaultJsonSerializerSettings, value)
 
     member this.WriteJsonAsync (settings: JsonSerializerSettings, value : obj) =
-        task {
+        job {
             this.SetHttpHeader "Content-Type" "application/json"
             do! serializeJson settings value |> this.WriteStringAsync
             return Some this
         }
 
     member this.WriteXmlAsync (value : obj) =
-        task {
+        job {
             this.SetHttpHeader "Content-Type" "application/xml"
             do! value |> serializeXml |> this.WriteBytesAsync
             return Some this
         }
 
     member this.WriteTextAsync (value : string) =
-        task {
+        job {
             this.SetHttpHeader "Content-Type" "text/plain"
             do! value |> this.WriteStringAsync
             return Some this
         }
 
     member this.RenderHtmlAsync (value: XmlNode) =
-        task {
+        job {
             this.SetHttpHeader "Content-Type" "text/html"
             do! value |> renderHtmlDocument |> this.WriteStringAsync
             return Some this
         }
 
     member this.ReturnHtmlFileAsync (relativeFilePath: String) =
-        task {
+        job {
             this.SetHttpHeader "Content-Type" "text/html"
             let env = this.GetService<IHostingEnvironment>()
             let filePath = Path.Combine(env.ContentRootPath, relativeFilePath)

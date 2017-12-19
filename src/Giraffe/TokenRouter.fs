@@ -6,6 +6,7 @@ open Microsoft.FSharp.Reflection
 open Printf
 open HttpHandlers
 open TokenParsers
+open Hopac
 
 // Implemenation of (router) Trie Node
 // --------------------------------------
@@ -430,7 +431,7 @@ let private processPath (abort:HttpHandler) (root:Node) : HttpHandler =
                         tf values
             
             let resultTask = pfc.fn input next ctx
-            task { 
+            job { 
                 let! result = resultTask 
                 match result with
                 | Some _ -> return! resultTask
@@ -444,7 +445,7 @@ let private processPath (abort:HttpHandler) (root:Node) : HttpHandler =
                 match h with
                 | HandlerMap fn -> 
                     let resultTask = fn next ctx // run function with all parameters
-                    task { 
+                    job { 
                         let! result = resultTask 
                         match result with
                         | Some _ -> return! resultTask

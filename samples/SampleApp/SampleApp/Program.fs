@@ -47,7 +47,7 @@ let mustBeJohn =
 
 let loginHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             let issuer = "http://localhost:5000"
             let claims =
                 [
@@ -89,7 +89,7 @@ type Car =
 
 let submitCar =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             let! car = ctx.BindModelAsync<Car>()
             return! json car next ctx
         }

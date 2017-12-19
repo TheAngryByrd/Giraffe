@@ -118,7 +118,7 @@ There were a few minor breaking changes in ASP.NET Core 2.0 which also affected 
 ## 0.1.0-beta-002
 
 - Fixed the `warbler` function. Should work as expected again.
-- Added support for `Async<'T>` in the `task {}` workflow. You can use an `Async<'T>` from within `task {}` without having to convert back to a `Task<'T>`
+- Added support for `Async<'T>` in the `job {}` workflow. You can use an `Async<'T>` from within `job {}` without having to convert back to a `Task<'T>`
 - Set the Giraffe dependency version in the template to a concrete version to avoid breaking changes in the template.
 
 ## 0.1.0-beta-001

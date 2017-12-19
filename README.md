@@ -179,7 +179,7 @@ let app =
 
 Another important aspect to Giraffe is that it natively works with .NET's `Task` and `Task<'T>` objects instead of relying on F#'s `async {}` workflows. The main benefit of this is that it removes the necessity of converting back and forth between tasks and async workflows when building a Giraffe web application (because ASP.NET Core only works with tasks out of the box).
 
-For this purpose Giraffe has it's own `task {}` workflow which comes with the `Giraffe.Tasks` NuGet package. Syntactically it works identical to F#'s async workflows:
+For this purpose Giraffe has it's own `job {}` workflow which comes with the `Giraffe.Tasks` NuGet package. Syntactically it works identical to F#'s async workflows:
 
 ```fsharp
 open Giraffe.Tasks
@@ -187,19 +187,19 @@ open Giraffe.HttpHandlers
 
 let personHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             let! person = ctx.BindModelAsync<Person>()
             return! json person next ctx
         }
 ```
 
-The `task {}` workflow is not strictly tied to Giraffe and can also be used from other places in an F# application:
+The `job {}` workflow is not strictly tied to Giraffe and can also be used from other places in an F# application:
 
 ```fsharp
 open Giraffe.Tasks
 
 let readFileAndDoSomething (filePath : string) =
-    task {
+    job {
         use stream = new FileStream(filePath, FileMode.Open)
         use reader = new StreamReader(stream)
         let! contents = reader.ReadToEndAsync()
@@ -1280,7 +1280,7 @@ open Giraffe.HttpContextExtensions
 
 let submitCar =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             // Binds a JSON payload to a Car object
             let! car = ctx.BindJsonAsync<Car>()
 
@@ -1339,7 +1339,7 @@ open Giraffe.HttpContextExtensions
 
 let submitCar =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             // Binds an XML payload to a Car object
             let! car = ctx.BindXmlAsync<Car>()
 
@@ -1403,7 +1403,7 @@ open Giraffe.HttpContextExtensions
 
 let submitCar =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             // Binds a form urlencoded payload to a Car object
             let! car = ctx.BindFormAsync<Car>()
 
@@ -1469,7 +1469,7 @@ open Giraffe.HttpContextExtensions
 
 let submitCar =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             // Binds a query string to a Car object
             let car = ctx.BindQueryString<Car>()
 
@@ -1531,7 +1531,7 @@ open Giraffe.HttpContextExtensions
 
 let submitCar =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        task {
+        job {
             // Binds a JSON, XML or form urlencoded payload to a Car object
             let! car = ctx.BindModelAsync<Car>()
 

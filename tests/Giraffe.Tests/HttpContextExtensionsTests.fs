@@ -56,7 +56,7 @@ let ``BindJsonAsync test`` () =
 
     let jsonHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindJsonAsync<Customer>()
                 return! text (model.ToString()) next ctx
             }
@@ -81,7 +81,7 @@ let ``BindJsonAsync test`` () =
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -95,7 +95,7 @@ let ``BindXmlAsync test`` () =
 
     let xmlHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindXmlAsync<Customer>()
                 return! text (model.ToString()) next ctx
             }
@@ -120,7 +120,7 @@ let ``BindXmlAsync test`` () =
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -134,7 +134,7 @@ let ``BindFormAsync test`` () =
 
     let formHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindFormAsync<Customer>()
                 return! text (model.ToString()) next ctx
             }
@@ -161,7 +161,7 @@ let ``BindFormAsync test`` () =
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -190,7 +190,7 @@ let ``BindQueryString test`` () =
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -218,7 +218,7 @@ let ``BindQueryString culture specific test`` () =
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1998-04-12, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -230,7 +230,7 @@ let ``BindQueryString culture specific test`` () =
 let ``BindQueryString with option property test`` () =
     let testRoute queryStr expected =
         let queryHandlerWithSome next (ctx : HttpContext) =
-            task {
+            job {
                 let model = ctx.BindQueryString<ModelWithOption>()
                 Assert.Equal(expected, model)
                 return! setStatusCode 200 next ctx
@@ -247,7 +247,7 @@ let ``BindQueryString with option property test`` () =
 
         app (Some >> Task.FromResult) ctx
 
-    task {
+    job {
         let! _ = testRoute "?OptionalInt=1&OptionalString=Hi" { OptionalInt = Some 1; OptionalString = Some "Hi" }
         let! _ = testRoute "?" { OptionalInt = None; OptionalString = None }
         return!  testRoute "?OptionalInt=&OptionalString=" { OptionalInt = None; OptionalString = Some "" }
@@ -260,7 +260,7 @@ let ``BindModelAsync with JSON content returns correct result`` () =
 
     let autoHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindModelAsync<Customer>()
                 return! text (model.ToString()) next ctx
             }
@@ -287,7 +287,7 @@ let ``BindModelAsync with JSON content returns correct result`` () =
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -301,7 +301,7 @@ let ``BindModelAsync with JSON content that uses custom serialization settings r
 
     let autoHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindModelAsync<Customer>(JsonSerializerSettings())
                 return! text (model.ToString()) next ctx
             }
@@ -328,7 +328,7 @@ let ``BindModelAsync with JSON content that uses custom serialization settings r
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -342,7 +342,7 @@ let ``BindModelAsync with XML content returns correct result`` () =
 
     let autoHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindModelAsync<Customer>()
                 return! text (model.ToString()) next ctx
             }
@@ -369,7 +369,7 @@ let ``BindModelAsync with XML content returns correct result`` () =
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -383,7 +383,7 @@ let ``BindModelAsync with FORM content returns correct result`` () =
 
     let autoHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindModelAsync<Customer>()
                 return! text (model.ToString()) next ctx
             }
@@ -412,7 +412,7 @@ let ``BindModelAsync with FORM content returns correct result`` () =
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -426,7 +426,7 @@ let ``BindModelAsync with culture aware form content returns correct result`` ()
 
     let autoHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindModelAsync<Customer>(CultureInfo.CreateSpecificCulture("en-GB"))
                 return! text (model.ToString()) next ctx
             }
@@ -455,7 +455,7 @@ let ``BindModelAsync with culture aware form content returns correct result`` ()
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 2015-01-04, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -469,7 +469,7 @@ let ``BindModelAsync with JSON content and a specific charset returns correct re
 
     let autoHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindModelAsync<Customer>()
                 return! text (model.ToString()) next ctx
             }
@@ -496,7 +496,7 @@ let ``BindModelAsync with JSON content and a specific charset returns correct re
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -510,7 +510,7 @@ let ``BindModelAsync during HTTP GET request with query string returns correct r
 
     let autoHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindModelAsync<Customer>()
                 return! text (model.ToString()) next ctx
             }
@@ -526,7 +526,7 @@ let ``BindModelAsync during HTTP GET request with query string returns correct r
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 1990-04-20, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -540,7 +540,7 @@ let ``BindModelAsync during HTTP GET request with culture aware query string ret
 
     let autoHandler =
         fun (next : HttpFunc) (ctx : HttpContext) ->
-            task {
+            job {
                 let! model = ctx.BindModelAsync<Customer>(CultureInfo.CreateSpecificCulture("en-GB"))
                 return! text (model.ToString()) next ctx
             }
@@ -556,7 +556,7 @@ let ``BindModelAsync during HTTP GET request with culture aware query string ret
 
     let expected = "Name: John Doe, IsVip: true, BirthDate: 2013-06-15, Balance: 150000.50, LoyaltyPoints: 137"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -587,7 +587,7 @@ let ``TryGetRequestHeader during HTTP GET request with returns correct result`` 
 
     let expected = "It works!"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -617,7 +617,7 @@ let ``TryGetQueryStringValue during HTTP GET request with query string returns c
 
     let expected = "1990-04-20"
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
@@ -648,7 +648,7 @@ let ``RenderHtmlAsync should add html to the context`` () =
 
     let expected = sprintf "<!DOCTYPE html>%s<html><head></head><body><h1>Hello world</h1></body></html>" Environment.NewLine
 
-    task {
+    job {
         let! result = app (Some >> Task.FromResult) ctx
 
         match result with
