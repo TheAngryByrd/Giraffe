@@ -80,37 +80,42 @@ type ConnectionManager(?messageSize) =
         member private __.Receive<'Msg> (webSocket:WebSocket,messageF,cancellationToken:CancellationToken) = task {
             let buffer = Array.zeroCreate messageSize |> ArraySegment<byte>
             use memoryStream = new IO.MemoryStream()
+            let mutable endOfMessage = false
+            let mutable result = Unchecked.defaultof<_>
 
-            // TODO: recursive with task aren't tail called optimized if i recall, may want to make iterative
-            let rec receive' () = task {
-                let! result = webSocket.ReceiveAsync(buffer, cancellationToken)
-                if result.CloseStatus.HasValue then
-                    do! webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, cancellationToken)
-                    return WebSocketMsg.Closing
+            while not endOfMessage do
+                let receiveTask = webSocket.ReceiveAsync(buffer, cancellationToken)
+                receiveTask.Wait()
+                let received = receiveTask.Result
+
+                if received.CloseStatus.HasValue then
+                    let t = webSocket.CloseAsync(received.CloseStatus.Value, received.CloseStatusDescription, cancellationToken)
+                    t.Wait()
+                    result <- WebSocketMsg.Closing
+                    endOfMessage <- true
                 else
-                    memoryStream.Write(buffer.Array,buffer.Offset,result.Count)
-                    if result.EndOfMessage then
-                        match result.MessageType with
+                    memoryStream.Write(buffer.Array,buffer.Offset,received.Count)
+                    if received.EndOfMessage then
+                        match received.MessageType with
                         | WebSocketMessageType.Binary ->
-                            return! raise (NotImplementedException())
+                            raise (NotImplementedException())
                         | WebSocketMessageType.Close ->
-                            return WebSocketMsg.Closing
+                            result <- WebSocketMsg.Closing 
+                            endOfMessage <- true
                         | WebSocketMessageType.Text ->
-                            let t : System.Threading.Tasks.Task<'Msg> = 
+                            let messageProcessingTask : System.Threading.Tasks.Task<'Msg> = 
                                 memoryStream.ToArray()
                                 |> System.Text.Encoding.UTF8.GetString
                                 |> fun s -> s.TrimEnd(char 0)
                                 |> messageF
-                            t.Wait()       
+                            messageProcessingTask.Wait()
 
-                            return WebSocketMsg.Data t.Result
+                            result <- WebSocketMsg.Data messageProcessingTask.Result
+                            endOfMessage <- true
                         | _ ->
-                            return! raise (NotImplementedException())
-                    else    
-                        return! receive' ()
-            }
-            return! receive' ()
-            
+                            raise (NotImplementedException())
+
+            return result
         }
 
         member this.RegisterClient<'Msg>(webSocket:WebSocket,websocketID,connectedF,messageF,cancellationToken:CancellationToken) = task {
@@ -118,6 +123,7 @@ type ConnectionManager(?messageSize) =
             connections.AddSocket(websocketID,webSocket)
             let t : System.Threading.Tasks.Task<unit> = connectedF webSocket websocketID
             t.Wait()
+
             while running && not cancellationToken.IsCancellationRequested do
                 let! msg = this.Receive<'Msg>(webSocket,messageF,cancellationToken)
                 match msg with  
