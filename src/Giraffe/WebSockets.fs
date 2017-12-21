@@ -27,6 +27,16 @@ let NegotiateSubProtocol(requestedSubProtocols,supportedProtocols) =
     |> Seq.tryFind (fun (supported:WebSocketSubprotocol) ->
         requestedSubProtocols |> Seq.contains supported.Name)
 
+let SendText (ws:WebSocket) (message:string) cancellationToken = task {
+    if not (isNull ws) && ws.State = WebSocketState.Open then
+        let a = System.Text.Encoding.UTF8.GetBytes(message)
+        let buffer = new ArraySegment<byte>(a, 0, a.Length)
+        let! _ =  ws.SendAsync(buffer, WebSocketMessageType.Text, true, cancellationToken)
+        return true
+    else
+        return false
+}        
+
 type private WebSocketConnectionDictionary() =
     let sockets = new System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>()
 
