@@ -3,6 +3,7 @@ module Giraffe.WebSocket
 open System
 open System.Net.WebSockets
 open System.Threading
+open System.Threading.Tasks
 open Giraffe.Tasks
 
 type SocketStatus =
@@ -42,7 +43,7 @@ type private WebSocketConnectionDictionary() =
         member __.GetSocket websocketID = 
             match sockets.TryGetValue websocketID with
             | true, s -> Some s
-            | _ -> None                
+            | _ -> None
 
         member __.AllConnections = sockets |> Seq.toArray
 
@@ -62,20 +63,23 @@ type ConnectionManager(?messageSize) =
 
         member __.GetSocket(id:string) = connections.GetSocket id
 
-        member __.SendToAll(msg:string,cancellationToken:CancellationToken) = task {
+        member __.SendToAll(msg:string,cancellationToken:CancellationToken) =
             let byteResponse =
                 msg
                 |> System.Text.Encoding.UTF8.GetBytes
 
-            for kv in connections.AllConnections do
+            connections.AllConnections
+            |> Seq.map (fun kv -> task {
                 if not cancellationToken.IsCancellationRequested then
                     let webSocket = kv.Value
                     if webSocket.State = WebSocketState.Open then
                         do! webSocket.SendAsync(new ArraySegment<byte>(byteResponse, 0, byteResponse.Length), WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false)
                     else
                         if webSocket.State = WebSocketState.Closed then
-                            connections.RemoveSocket kv.Key |> ignore
-        }
+                            connections.RemoveSocket kv.Key |> ignore 
+                    return ()
+                })
+            |> Task.WhenAll
 
         member private __.Receive<'Msg> (webSocket:WebSocket,messageF,cancellationToken:CancellationToken) = task {
             let buffer = Array.zeroCreate messageSize |> ArraySegment<byte>
